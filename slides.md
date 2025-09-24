@@ -1,16 +1,14 @@
-# Portada
+# Portada [layout:portada]
 Automatización con GitHub Actions
 Autor: Fernando
 ---
 
-# ¿Qué es GitHub Actions?
-- Plataforma de automatización integrada en GitHub
-- Permite ejecutar workflows en eventos
-- Útil para CI/CD, testing y despliegues
+# ¿Qué es GitHub Actions? [layout:contenido]
+- Automatización en GitHub
+- Workflows basados en eventos
+- CI/CD sin servidores
 ---
 
-# Conceptos clave
-- Workflow: archivo .yml que define el flujo
-- Jobs: conjunto de pasos
-- Steps: comandos o actions
-- Actions: bloques reutilizables
+# Arquitectura [layout:imagen]
+(diagrama.png)
+- GitHub → Actions → Deploy
