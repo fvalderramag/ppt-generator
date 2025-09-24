@@ -52,7 +52,7 @@ def add_slide(prs, layout_map, title, bullets, layout_key):
 
 
 def main():
-    prs = Presentation("templates/plantilla.pptx")
+    prs = Presentation("templates/template.pptx")
     slides = parse_slides("slides.md")
 
     # Mapeo de tipos de layout en la plantilla
