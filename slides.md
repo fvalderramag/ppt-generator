@@ -1,5 +1,5 @@
-# Portada [layout:portada]
-Propuesta claro sobre innovación tecnologica
+# Propuesta claro sobre innovación tecnologica [layout:portada]
+
 Octubre 2025
 ---
 
