@@ -1,0 +1,42 @@
+name: Generar PPT desde Input
+
+on:
+  workflow_dispatch:
+    inputs:
+      titulo:
+        description: "Título de la presentación"
+        required: true
+        default: "Automatización con GitHub Actions"
+        type: string
+      autor:
+        description: "Autor del PPT"
+        required: true
+        default: "Fernando"
+        type: string
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generar presentación PPTX
+        run: |
+          python scripts/generate_ppt.py "${{ github.event.inputs.titulo }}" "${{ github.event.inputs.autor }}"
+
+      - name: Subir artefacto (presentacion.pptx)
+        uses: actions/upload-artifact@v4
+        with:
+          name: presentacion
+          path: presentacion.pptx
