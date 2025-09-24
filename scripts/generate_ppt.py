@@ -46,13 +46,6 @@ def parse_slides(md_path):
             else:
                 bullets.append(stripped.lstrip("-").strip())
 
-        # Si el layout es portada → agregar fecha en español
-        if layout == "portada" and title:
-            fecha = datetime.now().strftime("%B %Y")  # ejemplo: "septiembre 2025"
-            # Capitalizar la primera letra del mes
-            fecha = fecha.capitalize()
-            title = f"{title}\n\n{fecha}"
-
         if title:
             slides.append((title, bullets, images, layout))
     return slides
@@ -62,10 +55,24 @@ def add_slide(prs, layout_map, title, bullets, images, layout_key):
     layout_index = layout_map.get(layout_key, layout_map["contenido"])
     slide = prs.slides.add_slide(prs.slide_layouts[layout_index])
 
-    # Para portada, solo texto con saltos de línea
+    # Para portada → título + salto + fecha
     if layout_key == "portada":
         if slide.shapes.title:
-            slide.shapes.title.text = title
+            tf = slide.shapes.title.text_frame
+            tf.clear()
+
+            # Párrafo con título
+            p1 = tf.add_paragraph()
+            p1.text = title
+
+            # Párrafo vacío (doble salto visual)
+            p2 = tf.add_paragraph()
+            p2.text = ""
+
+            # Mes y año en español
+            fecha = datetime.now().strftime("%B %Y").capitalize()
+            p3 = tf.add_paragraph()
+            p3.text = fecha
         return
 
     # Título normal
@@ -105,7 +112,7 @@ def main():
         add_slide(prs, layout_map, title, bullets, images, layout)
 
     prs.save("presentacion.pptx")
-    print("✅ Presentación generada con portada en español: presentacion.pptx")
+    print("✅ Presentación generada con portada multilínea y fecha en español: presentacion.pptx")
 
 
 if __name__ == "__main__":
