@@ -10,5 +10,5 @@ Autor: Fernando
 ---
 
 # Arquitectura [layout:imagen]
-(diagrama.png)
+assets/diagrama.png
 - GitHub → Actions → Deploy
