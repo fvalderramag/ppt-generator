@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
+import locale
 from datetime import datetime
 from pptx import Presentation
+
+# Configurar la localización en español
+try:
+    locale.setlocale(locale.LC_TIME, "es_ES.UTF-8")  # Linux/Mac
+except:
+    try:
+        locale.setlocale(locale.LC_TIME, "Spanish_Spain")  # Windows
+    except:
+        print("⚠️ No se pudo establecer locale en español, se usará inglés.")
 
 def parse_slides(md_path):
     with open(md_path, "r", encoding="utf-8") as f:
@@ -10,7 +20,6 @@ def parse_slides(md_path):
     slides = []
 
     for raw in raw_slides:
-        # NO eliminamos líneas en portada, porque necesitamos los saltos
         raw_lines = raw.strip().splitlines()
         if not raw_lines:
             continue
@@ -19,9 +28,6 @@ def parse_slides(md_path):
         bullets = []
         images = []
         layout = "contenido"
-
-        # Guardamos todas las líneas crudas (sin filtrar) para portada
-        processed_lines = []
 
         for line in raw_lines:
             stripped = line.strip()
@@ -39,18 +45,13 @@ def parse_slides(md_path):
                 images.append(stripped)
             else:
                 bullets.append(stripped.lstrip("-").strip())
-                processed_lines.append(stripped)
 
-        # Si el layout es portada → guardamos todas las líneas como "title con saltos"
-        if layout == "portada" and len(raw_lines) > 1:
-            # Tomamos todo lo que haya después del título markdown "# ..."
-            title_lines = []
-            for l in raw_lines[1:]:
-                if l.strip():
-                    title_lines.append(l.strip())
-            if title_lines:                
-                safe_title = title if title else ""
-                title = "\n".join([safe_title] + title_lines)
+        # Si el layout es portada → agregar fecha en español
+        if layout == "portada" and title:
+            fecha = datetime.now().strftime("%B %Y")  # ejemplo: "septiembre 2025"
+            # Capitalizar la primera letra del mes
+            fecha = fecha.capitalize()
+            title = f"{title}\n\n{fecha}"
 
         if title:
             slides.append((title, bullets, images, layout))
@@ -104,7 +105,7 @@ def main():
         add_slide(prs, layout_map, title, bullets, images, layout)
 
     prs.save("presentacion.pptx")
-    print("✅ Presentación generada con imágenes y portada multilínea: presentacion.pptx")
+    print("✅ Presentación generada con portada en español: presentacion.pptx")
 
 
 if __name__ == "__main__":
