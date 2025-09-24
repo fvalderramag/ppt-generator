@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from datetime import datetime
 from pptx import Presentation
 
 def parse_slides(md_path):
@@ -9,8 +10,9 @@ def parse_slides(md_path):
     slides = []
 
     for raw in raw_slides:
-        lines = [line.strip() for line in raw.strip().splitlines() if line.strip()]
-        if not lines:
+        # NO eliminamos líneas en portada, porque necesitamos los saltos
+        raw_lines = raw.strip().splitlines()
+        if not raw_lines:
             continue
 
         title = None
@@ -18,18 +20,37 @@ def parse_slides(md_path):
         images = []
         layout = "contenido"
 
-        for line in lines:
-            if line.startswith("#"):
-                if "[layout:" in line:
-                    parts = line.split("[layout:")
+        # Guardamos todas las líneas crudas (sin filtrar) para portada
+        processed_lines = []
+
+        for line in raw_lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            if stripped.startswith("#"):
+                if "[layout:" in stripped:
+                    parts = stripped.split("[layout:")
                     title = parts[0].lstrip("#").strip()
                     layout = parts[1].rstrip("]").strip()
                 else:
-                    title = line.lstrip("#").strip()
-            elif line.endswith((".png", ".jpg", ".jpeg")):
-                images.append(line)
+                    title = stripped.lstrip("#").strip()
+            elif stripped.endswith((".png", ".jpg", ".jpeg")):
+                images.append(stripped)
             else:
-                bullets.append(line.lstrip("-").strip())
+                bullets.append(stripped.lstrip("-").strip())
+                processed_lines.append(stripped)
+
+        # Si el layout es portada → guardamos todas las líneas como "title con saltos"
+        if layout == "portada" and len(raw_lines) > 1:
+            # Tomamos todo lo que haya después del título markdown "# ..."
+            title_lines = []
+            for l in raw_lines[1:]:
+                if l.strip():
+                    title_lines.append(l.strip())
+            if title_lines:                
+                safe_title = title if title else ""
+                title = "\n".join([safe_title] + title_lines)
 
         if title:
             slides.append((title, bullets, images, layout))
@@ -39,9 +60,17 @@ def parse_slides(md_path):
 def add_slide(prs, layout_map, title, bullets, images, layout_key):
     layout_index = layout_map.get(layout_key, layout_map["contenido"])
     slide = prs.slides.add_slide(prs.slide_layouts[layout_index])
+
+    # Para portada, solo texto con saltos de línea
+    if layout_key == "portada":
+        if slide.shapes.title:
+            slide.shapes.title.text = title
+        return
+
+    # Título normal
     slide.shapes.title.text = title
 
-    # Si hay texto
+    # Si hay texto (bullets)
     if len(slide.placeholders) > 1 and bullets:
         tf = slide.placeholders[1].text_frame
         tf.clear()
@@ -66,16 +95,16 @@ def main():
     slides = parse_slides("slides.md")
 
     layout_map = {
-        "portada": 0,
-        "contenido": 1,
-        "imagen": 2,  # Layout de título + imagen
+        "portada": 0,     # Tu layout de portada en la plantilla
+        "contenido": 1,   # Layout normal
+        "imagen": 2,      # Layout de título + imagen
     }
 
     for title, bullets, images, layout in slides:
         add_slide(prs, layout_map, title, bullets, images, layout)
 
     prs.save("presentacion.pptx")
-    print("✅ Presentación generada con imágenes en placeholders: presentacion.pptx")
+    print("✅ Presentación generada con imágenes y portada multilínea: presentacion.pptx")
 
 
 if __name__ == "__main__":

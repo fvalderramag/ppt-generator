@@ -1,8 +1,8 @@
 # Portada [layout:portada]
-Automatización con GitHub Actions
-Autor: Fernando
+Propuesta claro sobre innovación tecnologica
+Octubre 2025
 ---
 
 # Arquitectura [layout:imagen]
 assets/diagrama.png
-- GitHub → Actions → Deploy
+- Diagram colocado de manera automatica
