@@ -17,4 +17,3 @@
 
 # Propuesta de arquitectura [layout:imagen]
 assets/diagrama.png
-- Diagram colocado de manera automatica

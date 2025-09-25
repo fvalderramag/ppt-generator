@@ -42,7 +42,7 @@ def parse_slides(md_path):
                     layout = parts[1].rstrip("]").strip()
                 else:
                     title = stripped.lstrip("#").strip()
-            elif stripped.endswith((".png", ".jpg", ".jpeg")):
+            elif stripped.endswith((".png", ".jpg", ".jpeg", ".drawio")):
                 images.append(stripped)
             else:
                 bullets.append(stripped.lstrip("-").strip())
@@ -56,7 +56,7 @@ def add_slide(prs, layout_map, title, bullets, images, layout_key):
     layout_index = layout_map.get(layout_key, layout_map["contenido"])
     slide = prs.slides.add_slide(prs.slide_layouts[layout_index])
 
-    # Portada especial
+    # ✅ Portada especial
     if layout_key == "portada":
         if slide.shapes.title:
             tf = slide.shapes.title.text_frame
@@ -67,21 +67,38 @@ def add_slide(prs, layout_map, title, bullets, images, layout_key):
             p1.text = title
 
             # Espacio vacío
-            p2 = tf.add_paragraph()
-            p2.text = ""
+            tf.add_paragraph().text = ""
 
             # Fecha
             fecha = datetime.now().strftime("%B %Y").capitalize()
-            p3 = tf.add_paragraph()
-            p3.text = fecha
+            tf.add_paragraph().text = fecha
         return
 
-    # Título normal
-    slide.shapes.title.text = title
+    # ✅ Layout imagen (ignora texto, solo inserta imagen)
+    if layout_key == "imagen" and images:
+        for shape in slide.placeholders:
+            if "Picture" in shape.name or "Imagen" in shape.name:
+                try:
+                    shape.insert_picture(images[0])
+                    print(f"✅ Imagen insertada en placeholder: {images[0]}")
+                except Exception as e:
+                    print(f"⚠️ No se pudo insertar imagen {images[0]}: {e}")
+                break
+        return
 
-    # Bullets con estilo según el título
-    if len(slide.placeholders) > 1 and bullets:
-        tf = slide.placeholders[1].text_frame
+    # ✅ Otros layouts: título + bullets
+    if slide.shapes.title:
+        slide.shapes.title.text = title
+
+    # Buscar placeholder de cuerpo de texto (BODY = 2)
+    body_shape = None
+    for shape in slide.placeholders:
+        if shape.placeholder_format.type == 2:
+            body_shape = shape
+            break
+
+    if body_shape and bullets:
+        tf = body_shape.text_frame
         tf.clear()
         for i, bullet in enumerate(bullets):
             p = tf.add_paragraph() if i > 0 else tf.paragraphs[0]
@@ -93,18 +110,6 @@ def add_slide(prs, layout_map, title, bullets, images, layout_key):
                 run.font.bold = True   # Agenda → negrita
             elif title.lower().startswith("objetivos"):
                 run.font.bold = False  # Objetivos → sin negrita
-
-
-    # Layout imagen
-    if layout_key == "imagen" and images:
-        for shape in slide.placeholders:
-            if "Picture" in shape.name or "Imagen" in shape.name:
-                try:
-                    shape.insert_picture(images[0])
-                    print(f"✅ Imagen insertada en placeholder: {images[0]}")
-                except Exception as e:
-                    print(f"⚠️ No se pudo insertar imagen {images[0]}: {e}")
-                break
 
 
 def main():
