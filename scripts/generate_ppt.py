@@ -2,6 +2,8 @@
 import locale
 from datetime import datetime
 from pptx import Presentation
+from pptx.util import Pt  
+from PIL import Image
 
 # Configurar la localización en español
 try:
@@ -74,16 +76,33 @@ def add_slide(prs, layout_map, title, bullets, images, layout_key):
             tf.add_paragraph().text = fecha
         return
 
-    # ✅ Layout imagen (ignora texto, solo inserta imagen)
-    if layout_key == "imagen" and images:
-        for shape in slide.placeholders:
-            if "Picture" in shape.name or "Imagen" in shape.name:
-                try:
-                    shape.insert_picture(images[0])
-                    print(f"✅ Imagen insertada en placeholder: {images[0]}")
-                except Exception as e:
-                    print(f"⚠️ No se pudo insertar imagen {images[0]}: {e}")
-                break
+    # ✅ Layout imagen (solo título + imagen)
+    if layout_key == "imagen":
+        if slide.shapes.title:
+            slide.shapes.title.text = title
+
+        if images:
+            for shape in slide.placeholders:
+                if "Picture" in shape.name or "Imagen" in shape.name:                
+                    ph = shape
+                    # Tamaño del placeholder
+                    ph_width, ph_height = ph.width, ph.height
+
+                    # Tamaño real de la imagen
+                    img = Image.open(images[0])
+                    img_width, img_height = img.size
+
+                    # Escala proporcional
+                    ratio = min(ph_width / img_width, ph_height / img_height)
+                    new_width = int(img_width * ratio)
+                    new_height = int(img_height * ratio)
+
+                    # Centrar la imagen dentro del placeholder
+                    left = ph.left + (ph.width - new_width) // 2
+                    top = ph.top + (ph.height - new_height) // 2
+
+                    slide.shapes.add_picture(images[0], left, top, width=new_width, height=new_height)
+                    break
         return
 
     # ✅ Otros layouts: título + bullets
@@ -107,9 +126,11 @@ def add_slide(prs, layout_map, title, bullets, images, layout_key):
 
             # 🔹 Reglas de formato
             if title.lower().startswith("agenda"):
-                run.font.bold = True   # Agenda → negrita
+                run.font.bold = True
+                run.font.size = Pt(24)  # Tamaño Agenda
             elif title.lower().startswith("objetivos"):
-                run.font.bold = False  # Objetivos → sin negrita
+                run.font.bold = False
+                run.font.size = Pt(18)  # Tamaño Objetivos
 
 
 def main():
@@ -126,7 +147,7 @@ def main():
         add_slide(prs, layout_map, title, bullets, images, layout)
 
     prs.save("presentacion.pptx")
-    print("✅ Presentación generada con estilos en Agenda/Objetivos: presentacion.pptx")
+    print("✅ Presentación generada con estilos y tamaños en Agenda/Objetivos: presentacion.pptx")
 
 
 if __name__ == "__main__":
